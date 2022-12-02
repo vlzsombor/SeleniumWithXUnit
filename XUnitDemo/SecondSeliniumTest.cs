@@ -1,5 +1,5 @@
-﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
+﻿using FluentAssertions;
+using OpenQA.Selenium;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,17 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 
-using System.Collections.Generic;
-using Xunit;
-
 namespace XUnitDemo
 {
     [Collection("Sequence")]
-    public class SeleniumWithContext : IClassFixture<WebDriverFixture>
+    public class SecondSeliniumTest : IClassFixture<WebDriverFixture>
     {
         private readonly ITestOutputHelper testOutputHelper;
 
-        public SeleniumWithContext(WebDriverFixture webDriverFixture,
+        public SecondSeliniumTest(WebDriverFixture webDriverFixture,
             ITestOutputHelper testOutputHelper)
         {
             WebDriverFixture = webDriverFixture;
@@ -25,33 +22,6 @@ namespace XUnitDemo
         }
 
         public WebDriverFixture WebDriverFixture { get; }
-
-        [Fact]
-        public void Test1()
-        {
-            WebDriverFixture.ChromeDriver
-                .Navigate()
-                .GoToUrl("http://info.cern.ch/");
-        }
-
-
-        [Theory]
-        [InlineData("admin", "password")]
-        [InlineData("admin2", "password2")]
-        public void ClassFixtureTestFillData(string username, string password)
-        {
-            var driver = WebDriverFixture.ChromeDriver;
-
-            driver
-                .Navigate()
-                .GoToUrl("http://eaapp.somee.com/");
-
-            driver.FindElement(By.LinkText("Login")).Click();
-            driver.FindElement(By.Id("UserName")).SendKeys(username);
-            driver.FindElement(By.Id("Password")).SendKeys(password);
-            driver.FindElement(By.CssSelector(".btn-default")).Click();
-            testOutputHelper.WriteLine("Test completed");
-        }
 
         [Theory]
         [MemberData(nameof(Data))]
@@ -70,6 +40,55 @@ namespace XUnitDemo
             testOutputHelper.WriteLine("Test completed");
         }
 
+        [Theory]
+        [MemberData(nameof(Data))]
+        public void ThrowsException(string username, string password, string cpassword, string email)
+        {
+            var driver = WebDriverFixture.ChromeDriver;
+            driver
+                .Navigate()
+                .GoToUrl("http://eaapp.somee.com/");
+            driver.FindElement(By.LinkText("Register")).Click();
+            driver.FindElement(By.Id("UserName")).SendKeys(username);
+            driver.FindElement(By.Id("Password")).SendKeys(password);
+            driver.FindElement(By.Id("ConfirmPassword")).SendKeys(cpassword);
+            driver.FindElement(By.Id("Email")).SendKeys(email);
+            driver.FindElement(By.CssSelector(".btn-default")).Click();
+
+            var exception = Assert.Throws<NoSuchElementException>(() =>
+                driver.FindElement(By.Id("Emailasfdasdf")).SendKeys(email)
+            );
+
+            Assert.NotNull(exception);
+
+            testOutputHelper.WriteLine("Test completed");
+        }
+
+        [Theory]
+        [MemberData(nameof(Data))]
+        public void ThrowsException2(string username, string password, string cpassword, string email)
+        {
+            var driver = WebDriverFixture.ChromeDriver;
+            driver
+                .Navigate()
+                .GoToUrl("http://eaapp.somee.com/");
+            driver.FindElement(By.LinkText("Register")).Click();
+            driver.FindElement(By.Id("UserName")).SendKeys(username);
+            driver.FindElement(By.Id("Password")).SendKeys(password);
+            driver.FindElement(By.Id("ConfirmPassword")).SendKeys(cpassword);
+            driver.FindElement(By.Id("Email")).SendKeys(email);
+            driver.FindElement(By.CssSelector(".btn-default")).Click();
+
+            var exception = Assert.Throws<NoSuchElementException>(() =>
+                driver.FindElement(By.Id("Emailasfdasdf")).SendKeys(email)
+            );
+
+            exception.Message.Should().Contain("no such element");
+            Assert.NotNull(exception);
+
+            testOutputHelper.WriteLine("Test completed");
+        }
+
 
         public static IEnumerable<object[]> Data => new List<object[]>()
         {
@@ -81,7 +100,6 @@ namespace XUnitDemo
                 "bafeket254@dmonies.com",
             }
         };
-
 
     }
 }
